@@ -1,0 +1,21 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "18.18.0",
+    "sdksVersions": {
+      "@microsoft/microsoft-graph-client": "3.0.2",
+      "@microsoft/teams-js": "2.12.0"
+    },
+    "version": "1.18.0",
+    "libraryName": "spfxbasic-3",
+    "libraryId": "4c8afee5-6f2e-49c6-9a46-dcd9a226dcdb",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "spfxbasic-3",
+    "solutionShortDescription": "spfxbasic-3 description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}
