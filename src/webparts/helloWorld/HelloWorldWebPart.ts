@@ -9,6 +9,8 @@ import { escape } from '@microsoft/sp-lodash-subset';
 
 import {SPHttpClient,SPHttpClientResponse} from "@microsoft/sp-http";
 
+import {List,Lists} from "./helper"
+
 
 
 import styles from './HelloWorldWebPart.module.scss';
@@ -109,38 +111,103 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
 </div>
 
 <p>changes are made successfully.</p>
+<p> now this is working:</p>
 
       <div id = "data">
-        this is the data section here for the sharepoint List:-
+       
       </div>
 
 
 
     </section>`;
 
-     this.getListData();
+     //this.getListData();
+     this.getResponse();
   }
 
+  private renderList(value:List[]):void{
+
+    console.log("now we are at the renderList function:");
+
+    let html:string = `<table class= " ${styles.table1}">`
+
+     html+= `
+
+      <tr>
+
+      <th class = "${styles.th1}">Id</th>
+      <th class = "${styles.th1}">FirstName</th>
+      <th class = "${styles.th1}">SecondName</th>
+      <th class = "${styles.th1}">Email</th>
+      <th class = "${styles.th1}">Location</th>
+      <th class = "${styles.th1}">Status</th>
+      
+      </tr>
+
+      `
+
+      
+      
+
+    value.forEach((item:List)=>{
+      
+      html+= `
+        
+
+        <tr>
+        <td class = " ${styles.td1}">${item.Id1}</td>
+        
+        <td  class = " ${styles.td1}">${item.FirstName}</td>
+        <td  class = " ${styles.td1}">${item.SecondName}</td>
+        <td  class = " ${styles.td1}">${item.Email}</td>
+        <td  class = " ${styles.td1}">${item.Location}</td>
+        <td  class = " ${styles.td1}">${item.Status}</td>
+        
+        </tr>
+        
+       
+      `
+    })
+
+    html+= `</table>`
+
+    const data = this.domElement.querySelector("#data") as HTMLDivElement;
+    console.log(html);
+
+    data.innerHTML = html;
+
+  }
   
- private getListData():void{
+  private getResponse():void{
+     
+    this.getListData()
+    .then((response)=>{
+      console.log("the getresponse is working:");
+       this.renderList(response.value);
+    })
+    .catch((error)=>{
+      console.log("this is error: ",error);
+    })
+
+  }
+  
+ private getListData():Promise<Lists>{
     
-  this.context.spHttpClient.get(this.context.pageContext.web.absoluteUrl + "/_api/web/lists/getbytitle('Customer')/items",SPHttpClient.configurations.v1)
+  return this.context.spHttpClient.get(this.context.pageContext.web.absoluteUrl + "/_api/web/lists/getbytitle('Customer')/items",SPHttpClient.configurations.v1)
   .then((response:SPHttpClientResponse)=>{
 
     if(response.status === 200){
       console.log("list data is fatched:");
-      console.log("response.json() value is =  ", response.json());
+     // console.log("response.json() value is =  ", response.json());
       
-      let response1 = response.json();
-       response1.then((res)=>{
-        console.log(res.value)
-       }).catch((error)=>{
-        console.log(error);
-       })
+
+       return response.json();
      
     }
     else{
       console.log("not fatched",response.status);
+
+      return response.status;
     }
     
   })
