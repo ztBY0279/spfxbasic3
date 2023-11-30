@@ -7,7 +7,7 @@ import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import type { IReadonlyTheme } from '@microsoft/sp-component-base';
 import { escape } from '@microsoft/sp-lodash-subset';
 
-import {SPHttpClient,SPHttpClientResponse} from "@microsoft/sp-http";
+import {SPHttpClient,SPHttpClientResponse,ISPHttpClientOptions} from "@microsoft/sp-http";
 
 import {List,Lists} from "./helper"
 
@@ -68,11 +68,11 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
   <h2>Personal Information Form</h2>
 
 
-  <form>
+ <!-- <form onsubmit = "submitFormData()"> -->
   
-      <div class="form-group mb-3">
+    <div class="form-group mb-3">
       <label for="idNumber">ID</label>
-      <input type="number" class="form-control" id="idNumber" placeholder="Enter your ID number">
+      <input type="text" class="form-control" id="idNumber" placeholder="Enter your ID number">
     </div>
   
     <div class="form-group mb-3">
@@ -93,26 +93,39 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
 	
 	<div class="form-group mb-3">
       <label for="lastName">Location:</label>
-      <input type="text" class="form-control" id="lastName" placeholder="Enter your location">
+      <input type="text" class="form-control" id="location" placeholder="Enter your location">
     </div>
 	
-	<select class="form-select mb-3" aria-label="Default select example">
+	<select id="select" class="form-select mb-3" aria-label="Default select example">
   <option selected>status</option>
-  <option value="1">Approve</option>
-  <option value="2">Pending</option>
+  <option value="1">Approved</option>
+  <option value="2">pending</option>
   <option value="3">Rejected</option>
 </select>
 	
 
-    <button type="submit" class="btn btn-primary ">Submit</button>
-  </form>
+    <button id="form1" type="submit" class="btn btn-primary ">Submit</button>
+<!--  </form>  -->
 
 
 </div>
 
-<p>changes are made successfully.</p>
-<p> now this is working:</p>
+<p></p>
+<p></p>
 
+<br/>
+<br/>
+
+
+
+<button type="button"  class="btn btn-primary" id="btn1">Read</button>
+<button type="button" class="btn btn-secondary">Update</button>
+<button type="button" class="btn btn-success">Create</button>
+<button type="button" class="btn btn-danger">Delete</button>
+<button type="button" class="btn btn-warning" id="btn5">Clear below Data</button>
+
+<br/>
+<br/>
       <div id = "data">
        
       </div>
@@ -122,7 +135,45 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
     </section>`;
 
      //this.getListData();
-     this.getResponse();
+     const readButton = this.domElement.querySelector("#btn1") as HTMLButtonElement;
+     readButton.addEventListener("click",()=>{
+
+      this.temp();
+      
+
+     });
+
+     const clearButton = this.domElement.querySelector("#btn5") as HTMLButtonElement;
+     clearButton.addEventListener("click",()=>{
+        this.temp1();
+     });
+
+     // now submitting form data to the sharepoint list:-
+
+     const form1 = this .domElement.querySelector("#form1") as HTMLButtonElement;
+
+     form1.addEventListener('click',()=>{
+      this.submitFormData();
+     })
+
+     
+    
+  }
+
+
+  // this is the complete code for getting data from sharepoint list using rest api:-
+
+  // erasing the view item:-
+
+  private temp1():void{
+     const data1 = this.domElement.querySelector("#data") as HTMLDivElement;
+     data1.innerHTML = "";
+  }
+
+  private temp():void{
+
+    this.getResponse();
+  
   }
 
   private renderList(value:List[]):void{
@@ -150,12 +201,14 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
       
 
     value.forEach((item:List)=>{
+
+      
       
       html+= `
         
 
         <tr>
-        <td class = " ${styles.td1}">${item.Id1}</td>
+        <td class = " ${styles.td1}">${item.Title}</td>
         
         <td  class = " ${styles.td1}">${item.FirstName}</td>
         <td  class = " ${styles.td1}">${item.SecondName}</td>
@@ -215,6 +268,85 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
     console.log(error);
   })
  }
+
+
+// using a post request we are creating a new record in a list:-
+
+private submitFormData():void {
+
+//   .options[statusSelect.selectedIndex];
+// const selectedText = selectedOption.innerText;
+
+  const Title = (this.domElement.querySelector("#idNumber") as HTMLInputElement).value;
+  const firstName = (this.domElement.querySelector("#firstName") as HTMLInputElement).value;
+  const lasttName = (this.domElement.querySelector("#lastName") as HTMLInputElement).value;
+  const email = (this.domElement.querySelector("#email") as HTMLInputElement).value;
+  const location = (this.domElement.querySelector("#location") as HTMLInputElement).value;
+  // const status = (this.domElement.querySelector("#select") as HTMLSelectElement);
+  // console.log(status);
+
+  const statusSelect = this.domElement.querySelector("#select") as HTMLSelectElement;
+const selectedOption = statusSelect.options[statusSelect.selectedIndex];
+const status = selectedOption.innerText;
+
+console.log('Selected Text:', status);
+
+  
+
+  console.log(Title,firstName,lasttName,email,location,status);
+
+  const listUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Customer')/items`;
+ 
+  const itemData = {
+   // '__metadata': { 'type': 'SP.Data.CustomerListItem' },
+    'Title': Title,
+    'FirstName':firstName,
+    'SecondName':lasttName,
+    'Email':email,
+    'Location':location,
+    'Status':status
+
+   
+  };
+  // {
+  //   "headers": {
+  //     'Accept': 'application/json;odata=nometadata',
+  //     'Content-Type': 'application/json;odata=nometadata',
+  //     'odata-version': ''
+  //   },
+  //   "body": JSON.stringify(itemData)
+  // }
+
+  const config:ISPHttpClientOptions = {
+    "body":JSON.stringify(itemData)
+  }
+
+  this.context.spHttpClient.post(listUrl, SPHttpClient.configurations.v1, config)
+  .then((response: SPHttpClientResponse) => {
+    if (response.ok) {
+      console.log('Item created successfully');
+      alert("list item created successfully:");
+      // Add any additional logic after successful creation
+    } else {
+      console.error(`Error creating item: ${response.statusText}`);
+      console.log("the list item are not created:");
+    }
+  })
+  .catch((error) => {
+    console.error('Error creating item', error);
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
 
   protected onInit(): Promise<void> {
     return this._getEnvironmentMessage().then(message => {

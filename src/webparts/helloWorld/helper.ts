@@ -1,5 +1,5 @@
 export interface List{
-    Id1:string;
+    Title:string;
     FirstName:string;
     SecondName:string;
     Email:string;
