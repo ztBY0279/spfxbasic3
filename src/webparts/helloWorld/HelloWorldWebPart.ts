@@ -122,7 +122,7 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
 <button type="button"  class="btn btn-primary" id="btn1">Read</button>
 <button type="button" class="btn btn-secondary" id = "btn2">Update</button>
 <button type="button" class="btn btn-success">Create</button>
-<button type="button" class="btn btn-danger">Delete</button>
+<button type="button" class="btn btn-danger" id = "btn4">Delete</button>
 <button type="button" class="btn btn-warning" id="btn5">Clear below Data</button>
 
 <br/>
@@ -171,6 +171,12 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
 
      update.addEventListener("click",()=>{
       this.updateListItem();
+     });
+
+     const Delete = this.domElement.querySelector("#btn4") as HTMLButtonElement;
+
+     Delete.addEventListener("click",()=>{
+      this.deleteItem();
      })
 
 
@@ -387,29 +393,13 @@ private getListItemById(): void {
       const new1 =  (this.domElement.querySelector("#select") as HTMLSelectElement);
       console.log(new1);
       console.log("before value update is :",new1.value);
-     // console.log("the textcontent porperty",new1.textContent);
-      //(this.domElement.querySelector("#select") as HTMLSelectElement) = data.Status
-      // new1.options[new1.selectedIndex] = data.Status.;
-      // console.log(new1.innerHTML);
-      // console.log(new1.options);
-      // console.log(new1.options[new1.selectedIndex].innerText);
-
-      // const newstr:any = "0";
-
-      // const index = data.Status - newstr;
-       
-      //  new1.value = new1.options[data.Status - index].innerText;
-      //  console.log("the updated new1.value is ",new1.value);
+    
 
        new1.value = (new1.options[new1.selectedIndex]).text;
        console.log("the updated new1.value is ",new1.value);
        
 
-      // console.log(new1.selectedOptions);
-
-      //  const statusSelect = this.domElement.querySelector("#select") as HTMLSelectElement;
-      //    const selectedOption = statusSelect.options[statusSelect.selectedIndex];
-      //  const status = selectedOption.innerText;
+     
      
     })
     .catch((error) => {
@@ -480,6 +470,44 @@ private updateListItem():void{
   .catch((error) => {
     console.error('Error creating item', error);
   });
+
+
+
+}
+
+private deleteItem():void{
+
+  const listName = "Customer";
+
+  const Id = (this.domElement.querySelector("#idNumber") as HTMLInputElement).value;
+ const endpoint = this.context.pageContext.web.absoluteUrl +`/_api/web/lists/getbytitle('${listName}')/items(${Id})`
+  const header = {
+
+    "X-HTTP-Method":"DELETE",
+    "IF-MATCH":"*"
+  }
+
+  const config:ISPHttpClientOptions = {
+
+    "headers":header
+    
+  }
+
+  this.context.spHttpClient.post(endpoint,SPHttpClient.configurations.v1,config)
+  .then((response:SPHttpClientResponse)=>{
+
+    if(response.ok){
+      alert(`list item with id ${Id} is deleted`);
+    }
+    else{
+      alert("item is not deleted:");
+      console.log(response.statusText);
+    }
+  })
+  .catch((error)=>{
+    console.log("this contain the error:",error);
+  })
+
 
 
 
