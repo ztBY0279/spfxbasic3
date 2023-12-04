@@ -73,6 +73,7 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
     <div class="form-group mb-3">
       <label for="idNumber">ID</label>
       <input type="text" class="form-control" id="idNumber" placeholder="Enter your ID number">
+      <span><button id = "fetch">Fetch Record</button></span>
     </div>
   
     <div class="form-group mb-3">
@@ -119,7 +120,7 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
 
 
 <button type="button"  class="btn btn-primary" id="btn1">Read</button>
-<button type="button" class="btn btn-secondary">Update</button>
+<button type="button" class="btn btn-secondary" id = "btn2">Update</button>
 <button type="button" class="btn btn-success">Create</button>
 <button type="button" class="btn btn-danger">Delete</button>
 <button type="button" class="btn btn-warning" id="btn5">Clear below Data</button>
@@ -155,6 +156,25 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
      form1.addEventListener('click',()=>{
       this.submitFormData();
      })
+
+     // getlist data based on id:-
+     const fetchId = this.domElement.querySelector("#fetch") as HTMLButtonElement;
+     fetchId.addEventListener("click",()=>{
+      this.getListItemById();
+     })
+
+
+
+     // update sharepoint list data:-
+
+     const update = this.domElement.querySelector("#btn2") as HTMLButtonElement;
+
+     update.addEventListener("click",()=>{
+      this.updateListItem();
+     })
+
+
+  
 
      
     
@@ -341,7 +361,129 @@ console.log('Selected Text:', status);
 
 
 
+// fetching record based on specifi id :
 
+private getListItemById(): void {
+
+  const listName = 'Customer'; // Replace with your actual list name
+  const itemId =  (this.domElement.querySelector("#idNumber") as HTMLInputElement).value;
+  const endpointUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items(${itemId})`;
+
+  this.context.spHttpClient.get(endpointUrl, SPHttpClient.configurations.v1)
+    .then((response: SPHttpClientResponse) => response.json())
+    .then((data) => {
+      console.log('Item data:', data);
+      // Process the retrieved item data
+      console.log("this is data.Title",data.Title);
+      console.log("this is firstname:",data.FirstName);
+      console.log("this is data.value",data.value);
+      console.log(data.Status);
+
+       (this.domElement.querySelector("#idNumber") as HTMLInputElement).value =data.Title;
+       (this.domElement.querySelector("#firstName") as HTMLInputElement).value = data.FirstName;
+       (this.domElement.querySelector("#lastName") as HTMLInputElement).value = data.SecondName;
+       (this.domElement.querySelector("#email") as HTMLInputElement).value = data.Email;
+       (this.domElement.querySelector("#location") as HTMLInputElement).value = data.Location;
+      const new1 =  (this.domElement.querySelector("#select") as HTMLSelectElement);
+      console.log(new1);
+      console.log("before value update is :",new1.value);
+     // console.log("the textcontent porperty",new1.textContent);
+      //(this.domElement.querySelector("#select") as HTMLSelectElement) = data.Status
+      // new1.options[new1.selectedIndex] = data.Status.;
+      // console.log(new1.innerHTML);
+      // console.log(new1.options);
+      // console.log(new1.options[new1.selectedIndex].innerText);
+
+      // const newstr:any = "0";
+
+      // const index = data.Status - newstr;
+       
+      //  new1.value = new1.options[data.Status - index].innerText;
+      //  console.log("the updated new1.value is ",new1.value);
+
+       new1.value = (new1.options[new1.selectedIndex]).text;
+       console.log("the updated new1.value is ",new1.value);
+       
+
+      // console.log(new1.selectedOptions);
+
+      //  const statusSelect = this.domElement.querySelector("#select") as HTMLSelectElement;
+      //    const selectedOption = statusSelect.options[statusSelect.selectedIndex];
+      //  const status = selectedOption.innerText;
+     
+    })
+    .catch((error) => {
+      console.error('Error retrieving item', error);
+    });
+}
+
+
+
+// update the sharepoint list Item.
+
+private updateListItem():void{
+
+  const Title = (this.domElement.querySelector("#idNumber") as HTMLInputElement).value;
+  const firstName = (this.domElement.querySelector("#firstName") as HTMLInputElement).value;
+  const lasttName = (this.domElement.querySelector("#lastName") as HTMLInputElement).value;
+  const email = (this.domElement.querySelector("#email") as HTMLInputElement).value;
+  const location = (this.domElement.querySelector("#location") as HTMLInputElement).value;
+  
+
+  const statusSelect = this.domElement.querySelector("#select") as HTMLSelectElement;
+  const selectedOption = statusSelect.options[statusSelect.selectedIndex];
+  const status = selectedOption.innerText;
+
+
+
+
+
+  const listUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Customer')/items(${Title})`;
+ 
+  const itemData = {
+   // '__metadata': { 'type': 'SP.Data.CustomerListItem' },
+    'Title': Title,
+    'FirstName':firstName,
+    'SecondName':lasttName,
+    'Email':email,
+    'Location':location,
+    'Status':status
+
+   
+  };
+
+  const header = {
+    "X-HTTP-Method":"MERGE",
+    "IF-MATCH": "*"
+  }
+  
+
+  const config:ISPHttpClientOptions = {
+
+    "body":JSON.stringify(itemData),
+    "headers":header
+
+  }
+
+  this.context.spHttpClient.post(listUrl, SPHttpClient.configurations.v1, config)
+  .then((response: SPHttpClientResponse) => {
+    if (response.ok) {
+      console.log('Item created successfully');
+      alert("list item updated successfully:");
+      // Add any additional logic after successful creation
+    } else {
+      console.error(`Error creating item: ${response.statusText}`);
+      console.log("the list item are not created:");
+      alert("list item is not updated.");
+    }
+  })
+  .catch((error) => {
+    console.error('Error creating item', error);
+  });
+
+
+
+}
 
 
 
